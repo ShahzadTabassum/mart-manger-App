@@ -4,6 +4,8 @@ import Dashboard from "./pages/Dashboard";
 import Products  from "./pages/Products";
 import Inventory from "./pages/Inventory";
 import Suppliers from "./pages/Suppliers";
+import POS       from "./pages/POS";
+import Sales     from "./pages/Sales";
 export default function App() {
   return (
     <BrowserRouter>
@@ -12,6 +14,8 @@ export default function App() {
         <main style={{flex:1,overflowY:"auto"}}>
           <Routes>
             <Route path="/"          element={<Dashboard/>}/>
+            <Route path="/pos"       element={<POS/>}/>
+            <Route path="/sales"     element={<Sales/>}/>
             <Route path="/products"  element={<Products/>}/>
             <Route path="/inventory" element={<Inventory/>}/>
             <Route path="/suppliers" element={<Suppliers/>}/>
