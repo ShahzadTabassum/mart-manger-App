@@ -1,0 +1,11 @@
+import axios from "axios";
+const API = axios.create({ baseURL: "http://localhost:8000" });
+export const getProducts    = (params) => API.get("/products/", { params });
+export const getProduct     = (id)     => API.get(`/products/${id}`);
+export const createProduct  = (data)   => API.post("/products/", data);
+export const updateProduct  = (id, data) => API.put(`/products/${id}`, data);
+export const deleteProduct  = (id)     => API.delete(`/products/${id}`);
+export const getCategories  = ()       => API.get("/categories/");
+export const getSuppliers   = ()       => API.get("/suppliers/");
+export const getLowStock    = ()       => API.get("/inventory/low-stock");
+export const recordMovement = (data)   => API.post("/inventory/movement", data);
