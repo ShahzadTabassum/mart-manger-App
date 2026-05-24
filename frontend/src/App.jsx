@@ -9,6 +9,7 @@ import Sales      from "./pages/Sales";
 import Categories from "./pages/Categories";
 import Customers  from "./pages/Customers";
 import Employees  from "./pages/Employees";
+import Returns    from "./pages/Returns";
 export default function App() {
   return (
     <BrowserRouter>
@@ -19,6 +20,7 @@ export default function App() {
             <Route path="/"           element={<Dashboard/>}/>
             <Route path="/pos"        element={<POS/>}/>
             <Route path="/sales"      element={<Sales/>}/>
+            <Route path="/returns"    element={<Returns/>}/>
             <Route path="/customers"  element={<Customers/>}/>
             <Route path="/products"   element={<Products/>}/>
             <Route path="/categories" element={<Categories/>}/>

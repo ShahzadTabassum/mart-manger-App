@@ -1,10 +1,11 @@
 import { NavLink } from "react-router-dom";
 const groups = [
   { label:"SALES", links:[
-    { to:"/",         icon:"📊", label:"Dashboard"      },
-    { to:"/pos",      icon:"🛒", label:"Point of Sale"  },
-    { to:"/sales",    icon:"🧾", label:"Sales & Reports"},
-    { to:"/customers",icon:"👥", label:"Customers"      },
+    { to:"/",        icon:"📊", label:"Dashboard"       },
+    { to:"/pos",     icon:"🛒", label:"Point of Sale"   },
+    { to:"/sales",   icon:"🧾", label:"Sales & Reports" },
+    { to:"/returns", icon:"🔄", label:"Returns & Exchange"},
+    { to:"/customers",icon:"👥",label:"Customers"        },
   ]},
   { label:"INVENTORY", links:[
     { to:"/products",   icon:"📦", label:"Products"   },
@@ -13,7 +14,7 @@ const groups = [
     { to:"/suppliers",  icon:"🚚", label:"Suppliers"  },
   ]},
   { label:"STAFF", links:[
-    { to:"/employees", icon:"👨‍💼", label:"Employees" },
+    { to:"/employees", icon:"👨‍💼", label:"Salesman" },
   ]},
 ];
 export default function Sidebar() {
@@ -23,7 +24,7 @@ export default function Sidebar() {
         <div style={s.logoIcon}>🛍️</div>
         <div>
           <div style={s.logoName}>MartManager</div>
-          <div style={s.logoSub}>v3.0 · Full Management</div>
+          <div style={s.logoSub}>v3.1 · Full Management</div>
         </div>
       </div>
       <nav style={{flex:1,overflowY:"auto"}}>
@@ -38,7 +39,7 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
-      <div style={s.footer}>Phase 3 — Customers & Staff</div>
+      <div style={s.footer}>v3.1 · Returns & Exchange</div>
     </aside>
   );
 }

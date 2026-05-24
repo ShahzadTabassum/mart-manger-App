@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { getProducts } from "../api/products";
 import { createSale } from "../api/sales";
 import { searchByPhone, createCustomer } from "../api/customers";
+import { getEmployees } from "../api/employees";
 import Receipt from "../components/Receipt";
 
 export default function POS() {
@@ -24,9 +25,10 @@ export default function POS() {
   const [newCustName,  setNewCustName]  = useState("");     // name input for new customer
   const [redeemPts,    setRedeemPts]    = useState(0);
   const [registering,  setRegistering]  = useState(false);
+  const [salesmen,     setSalesmen]     = useState([]);
 
   const searchRef = useRef();
-  useEffect(() => { getProducts().then(r => setProducts(r.data)); }, []);
+  useEffect(() => { getProducts().then(r => setProducts(r.data)); getEmployees().then(r => setSalesmen(r.data)); }, []);
   useEffect(() => { searchRef.current?.focus(); }, []);
 
   const filtered = products.filter(p =>
@@ -289,7 +291,10 @@ export default function POS() {
           )}
 
           <L>Served by</L>
-          <input style={s.input} placeholder="Staff name" value={servedBy} onChange={e => setServedBy(e.target.value)} />
+          <select style={s.input} value={servedBy} onChange={e => setServedBy(e.target.value)}>
+            <option value="">Select salesman</option>
+            {salesmen.map(sm => <option key={sm.id} value={sm.name}>{sm.name}</option>)}
+          </select>
           <L>Note (optional)</L>
           <input style={s.input} placeholder="Any note…" value={note} onChange={e => setNote(e.target.value)} />
 
