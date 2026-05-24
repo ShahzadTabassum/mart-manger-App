@@ -83,7 +83,7 @@ class ProductOut(BaseModel):
 # ---------- Stock Movement ----------
 class StockMovementIn(BaseModel):
     product_id: int
-    movement_type: str  # IN | OUT | ADJUSTMENT
+    movement_type: str
     quantity: int
     note: Optional[str] = None
     created_by: Optional[str] = None
@@ -109,13 +109,15 @@ class SaleItemOut(BaseModel):
     class Config: from_attributes = True
 
 class SaleIn(BaseModel):
-    payment_method: str         # CASH | CARD | QR
+    payment_method: str             # CASH | CARD | QR
     items: List[SaleItemIn]
-    discount_type: Optional[str] = None    # PERCENT | FIXED
+    discount_type: Optional[str]  = None   # PERCENT | FIXED
     discount_value: Optional[Decimal] = None
     amount_paid: Optional[Decimal] = None
     note: Optional[str] = None
     served_by: Optional[str] = None
+    customer_id: Optional[int] = None
+    redeem_points: Optional[int] = None
 
 class SaleOut(BaseModel):
     id: int
@@ -130,6 +132,9 @@ class SaleOut(BaseModel):
     change_given: Optional[Decimal] = None
     note: Optional[str] = None
     served_by: Optional[str] = None
+    customer_id: Optional[int] = None
+    loyalty_earned: Optional[int] = 0
+    loyalty_redeemed: Optional[int] = 0
     created_at: Optional[datetime] = None
     items: List[SaleItemOut] = []
     class Config: from_attributes = True

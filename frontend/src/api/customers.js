@@ -1,0 +1,11 @@
+import axios from "axios";
+const API = axios.create({ baseURL: "http://localhost:8000" });
+export const getCustomers      = (params) => API.get("/customers/", { params });
+export const getTopCustomers   = ()       => API.get("/customers/top");
+export const getCustomer       = (id)     => API.get(`/customers/${id}`);
+export const getCustomerHistory= (id)     => API.get(`/customers/${id}/history`);
+export const searchByPhone     = (phone)  => API.get("/customers/search-by-phone", { params:{ phone } });
+export const createCustomer    = (data)   => API.post("/customers/", data);
+export const updateCustomer    = (id,data)=> API.put(`/customers/${id}`, data);
+export const deleteCustomer    = (id)     => API.delete(`/customers/${id}`);
+export const adjustLoyalty     = (id,data)=> API.post(`/customers/${id}/loyalty`, data);

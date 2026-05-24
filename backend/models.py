@@ -8,10 +8,13 @@ from database import Base
 class Category(Base):
     __tablename__ = "categories"
     id          = Column(Integer, primary_key=True, index=True)
+    parent_id   = Column(Integer, ForeignKey("categories.id", ondelete="SET NULL"), nullable=True)
     name        = Column(String(100), nullable=False, unique=True)
+    icon        = Column(String(10), default="🏷️")
     description = Column(Text)
     created_at  = Column(TIMESTAMP, server_default=func.now())
     products    = relationship("Product", back_populates="category")
+    children    = relationship("Category", backref="parent", remote_side="Category.id", foreign_keys=[parent_id])
 
 class Supplier(Base):
     __tablename__ = "suppliers"
@@ -37,7 +40,6 @@ class Product(Base):
     is_active   = Column(Boolean, default=True)
     created_at  = Column(TIMESTAMP, server_default=func.now())
     updated_at  = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
-
     category  = relationship("Category", back_populates="products")
     supplier  = relationship("Supplier", back_populates="products")
     inventory = relationship("Inventory", back_populates="product", uselist=False)
@@ -77,20 +79,38 @@ class StockMovement(Base):
 
 class Sale(Base):
     __tablename__ = "sales"
-    id              = Column(Integer, primary_key=True, index=True)
-    sale_number     = Column(String(30), nullable=False, unique=True)
-    payment_method  = Column(Enum("CASH","CARD","QR"), nullable=False)
-    subtotal        = Column(DECIMAL(10,2), nullable=False, default=0.00)
-    discount_type   = Column(Enum("PERCENT","FIXED"), nullable=True)
-    discount_value  = Column(DECIMAL(10,2), default=0.00)
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    sale_number = Column(String(30), nullable=False, unique=True)
+
+    payment_method = Column(Enum("CASH","CARD","QR"), nullable=False)
+
+    subtotal = Column(DECIMAL(10,2), nullable=False, default=0.00)
+
+    discount_type = Column(Enum("PERCENT","FIXED"), nullable=True)
+    discount_value = Column(DECIMAL(10,2), default=0.00)
     discount_amount = Column(DECIMAL(10,2), default=0.00)
-    total           = Column(DECIMAL(10,2), nullable=False, default=0.00)
-    amount_paid     = Column(DECIMAL(10,2), default=0.00)
-    change_given    = Column(DECIMAL(10,2), default=0.00)
-    note            = Column(String(255))
-    served_by       = Column(String(100))
-    created_at      = Column(TIMESTAMP, server_default=func.now())
-    items           = relationship("SaleItem", back_populates="sale", cascade="all, delete")
+
+    total = Column(DECIMAL(10,2), nullable=False, default=0.00)
+
+    amount_paid = Column(DECIMAL(10,2), default=0.00)
+    change_given = Column(DECIMAL(10,2), default=0.00)
+
+    note = Column(String(255))
+    served_by = Column(String(100))
+
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=True)
+
+    loyalty_earned = Column(Integer, default=0)
+    loyalty_redeemed = Column(Integer, default=0)
+
+    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    items = relationship("SaleItem", back_populates="sale", cascade="all, delete")
+
+    # ADD THIS
+    customer = relationship("Customer")
 
 class SaleItem(Base):
     __tablename__ = "sale_items"
@@ -104,3 +124,38 @@ class SaleItem(Base):
     line_total   = Column(DECIMAL(10,2), nullable=False)
     created_at   = Column(TIMESTAMP, server_default=func.now())
     sale         = relationship("Sale", back_populates="items")
+
+class Customer(Base):
+    __tablename__ = "customers"
+    id             = Column(Integer, primary_key=True, index=True)
+    name           = Column(String(150), nullable=False)
+    phone          = Column(String(30),  nullable=False, unique=True)
+    loyalty_points = Column(Integer,     nullable=False, default=0)
+    total_spent    = Column(DECIMAL(10,2), nullable=False, default=0.00)
+    visit_count    = Column(Integer,     nullable=False, default=0)
+    is_active      = Column(Boolean,     nullable=False, default=True)
+    created_at     = Column(TIMESTAMP,   server_default=func.now())
+    updated_at     = Column(TIMESTAMP,   server_default=func.now(), onupdate=func.now())
+    loyalty_txns   = relationship("LoyaltyTransaction", back_populates="customer", cascade="all, delete")
+
+class LoyaltyTransaction(Base):
+    __tablename__ = "loyalty_transactions"
+    id          = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id", ondelete="CASCADE"), nullable=False)
+    sale_id     = Column(Integer, ForeignKey("sales.id",     ondelete="SET NULL"), nullable=True)
+    type        = Column(Enum("EARN","REDEEM","ADJUSTMENT"), nullable=False)
+    points      = Column(Integer, nullable=False)
+    note        = Column(String(255))
+    created_at  = Column(TIMESTAMP, server_default=func.now())
+    customer    = relationship("Customer", back_populates="loyalty_txns")
+
+class Employee(Base):
+    __tablename__ = "employees"
+    id         = Column(Integer, primary_key=True, index=True)
+    name       = Column(String(150), nullable=False)
+    phone      = Column(String(30))
+    role       = Column(Enum("ADMIN","MANAGER","CASHIER"), nullable=False, default="CASHIER")
+    pin        = Column(String(6),   nullable=False)
+    is_active  = Column(Boolean,     nullable=False, default=True)
+    created_at = Column(TIMESTAMP,   server_default=func.now())
+    updated_at = Column(TIMESTAMP,   server_default=func.now(), onupdate=func.now())
