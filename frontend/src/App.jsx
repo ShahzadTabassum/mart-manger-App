@@ -14,6 +14,7 @@ import Customers  from "./pages/Customers";
 import Employees  from "./pages/Employees";
 import Returns    from "./pages/Returns";
 import Users      from "./pages/Users";
+import ForgotPassword from "./pages/ForgotPassword";
 
 function AppLayout() {
   const { user, loading } = useAuth();
@@ -49,6 +50,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login/>}/>
           <Route path="/*"     element={<AppLayout/>}/>
+          <Route path="/forgot-password" element={<ForgotPassword />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -193,3 +193,19 @@ class User(Base):
     is_active  = Column(Boolean, nullable=False, default=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+
+class PasswordResetOTP(Base):
+    __tablename__ = "password_reset_otps"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    phone = Column(String(30), nullable=False)
+
+    otp = Column(String(6), nullable=False)
+
+    is_used = Column(Boolean, default=False)
+
+    created_at = Column(
+        TIMESTAMP,
+        server_default=func.now()
+    )

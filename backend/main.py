@@ -1,8 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import products, inventory, categories, suppliers, sales, customers, employees, returns, auth
+from database import engine
+from models import Base
+import models
+
 
 app = FastAPI(title="MartManager API", version="4.0.0")
+Base.metadata.create_all(bind=engine)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

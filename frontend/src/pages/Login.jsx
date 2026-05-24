@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { login } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 
 export default function Login() {
   const { user, loginUser } = useAuth();
@@ -71,12 +72,19 @@ export default function Login() {
           <button style={{...s.loginBtn,...(loading?s.loginBtnDisabled:{})}} type="submit" disabled={loading}>
             {loading ? "Signing in…" : "Sign In →"}
           </button>
+          <div style={{ textAlign: "center", marginTop: 14 }}>
+  <Link
+    to="/forgot-password"
+    style={{
+      fontSize: 13,
+      color: "#4f46e5",
+      textDecoration: "none"
+    }}
+  >
+    Forgot Password?
+  </Link>
+</div>
         </form>
-
-        <div style={s.hint}>
-          <strong>Default admin:</strong> Phone: 0000000000 · Password: admin123
-          <br/>Change your password after first login.
-        </div>
       </div>
     </div>
   );

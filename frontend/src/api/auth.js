@@ -15,4 +15,11 @@ export const createUser   = (data)        => API.post("/auth/users", data);
 export const updateUser   = (id, data)    => API.put(`/auth/users/${id}`, data);
 export const deleteUser   = (id)          => API.delete(`/auth/users/${id}`);
 export const changePassword = (data)      => API.post("/auth/change-password", data);
+export const forgotPassword = (data) =>
+  API.post("/auth/forgot-password", data);
+export const resendResetOTP = (data) =>
+  API.post("/auth/resend-reset-otp", data);
+
+export const verifyResetOTP = (data) =>
+  API.post("/auth/verify-reset-otp", data);
 export default API;

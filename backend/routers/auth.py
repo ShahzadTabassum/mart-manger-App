@@ -6,6 +6,8 @@ from typing import Optional
 from jose import JWTError, jwt
 from database import get_db
 import models, bcrypt, os
+from datetime import datetime, timedelta
+import random
 
 router   = APIRouter(prefix="/auth", tags=["Auth"])
 security = HTTPBearer()
@@ -26,6 +28,17 @@ class UserIn(BaseModel):
 
 class PasswordChange(BaseModel):
     old_password: str
+    new_password: str
+class ForgotPasswordIn(BaseModel):
+    phone: str
+
+class ResetPasswordIn(BaseModel):
+    phone: str
+    new_password: str
+
+class OTPVerifyIn(BaseModel):
+    phone: str
+    otp: str
     new_password: str
 
 # ---------- Password helpers using bcrypt directly ----------
@@ -132,3 +145,129 @@ def change_password(data: PasswordChange, current_user: models.User = Depends(ge
     current_user.password = hash_password(data.new_password)
     db.commit()
     return {"message": "Password changed successfully"}
+
+@router.post("/forgot-password")
+def forgot_password(
+    data: ForgotPasswordIn,
+    db: Session = Depends(get_db)
+):
+    print("Incoming phone:", data.phone)
+    user = db.query(models.User).filter(
+        models.User.phone == data.phone
+    ).first()
+    print("Found user:", user)
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    otp = str(random.randint(100000, 999999))
+
+    reset = models.PasswordResetOTP(
+        phone=data.phone,
+        otp=otp
+    )
+
+    db.add(reset)
+    db.commit()
+
+    print(f"OTP for {data.phone}: {otp}")
+
+    return {
+        "message": "OTP generated"
+    }
+
+@router.post("/resend-reset-otp")
+def resend_reset_otp(
+    data: ForgotPasswordIn,
+    db: Session = Depends(get_db)
+):
+    user = db.query(models.User).filter(
+        models.User.phone == data.phone
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    # invalidate old OTPs
+    db.query(models.PasswordResetOTP).filter(
+        models.PasswordResetOTP.phone == data.phone,
+        models.PasswordResetOTP.is_used == False
+    ).update({
+        "is_used": True
+    })
+
+    otp = str(random.randint(100000, 999999))
+
+    otp_entry = models.PasswordResetOTP(
+        phone=data.phone,
+        otp=otp
+    )
+
+    db.add(otp_entry)
+    db.commit()
+
+    print(f"Resend OTP for {data.phone}: {otp}")
+
+    return {
+        "message": "OTP resent successfully"
+    }
+
+@router.post("/verify-reset-otp")
+def verify_reset_otp(
+    data: OTPVerifyIn,
+    db: Session = Depends(get_db)
+):
+
+    otp_record = db.query(models.PasswordResetOTP).filter(
+        models.PasswordResetOTP.phone == data.phone,
+        models.PasswordResetOTP.otp == data.otp,
+        models.PasswordResetOTP.is_used == False
+    ).order_by(
+        models.PasswordResetOTP.id.desc()
+    ).first()
+
+    if not otp_record:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid OTP"
+        )
+
+    created = otp_record.created_at
+
+    if datetime.now() - created > timedelta(minutes=5):
+        raise HTTPException(
+            status_code=400,
+            detail="OTP expired"
+        )
+
+    user = db.query(models.User).filter(
+        models.User.phone == data.phone
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    if len(data.new_password) < 6:
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 6 characters"
+        )
+
+    user.password = hash_password(data.new_password)
+
+    otp_record.is_used = True
+
+    db.commit()
+
+    return {
+        "message": "Password reset successful"
+    }
