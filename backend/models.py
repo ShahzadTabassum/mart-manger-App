@@ -182,3 +182,14 @@ class ExchangeItem(Base):
     quantity     = Column(Integer, nullable=False)
     line_total   = Column(DECIMAL(10,2), nullable=False)
     ret          = relationship("Return", back_populates="exchange_items")
+
+class User(Base):
+    __tablename__ = "users"
+    id         = Column(Integer, primary_key=True, index=True)
+    name       = Column(String(150), nullable=False)
+    phone      = Column(String(30),  nullable=False, unique=True)
+    password   = Column(String(255), nullable=False)
+    role       = Column(Enum("ADMIN","MANAGER","CASHIER"), nullable=False, default="CASHIER")
+    is_active  = Column(Boolean, nullable=False, default=True)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
