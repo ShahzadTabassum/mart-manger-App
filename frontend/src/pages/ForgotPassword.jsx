@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   forgotPassword,
   verifyResetOTP,
@@ -19,6 +19,24 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [timer, setTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+
+  useEffect(() => {
+  let interval;
+
+  if (step === 2 && timer > 0) {
+    interval = setInterval(() => {
+      setTimer((prev) => prev - 1);
+    }, 1000);
+  }
+
+  if (timer === 0) {
+    setCanResend(true);
+  }
+
+  return () => clearInterval(interval);
+}, [timer, step]);
 
   const handleVerify = async (e) => {
     e.preventDefault();
@@ -30,11 +48,15 @@ export default function ForgotPassword() {
     try {
 
       await forgotPassword({
-        phone: phone.trim()
-      });
+  phone: phone.trim()
+        });
 
-      setSuccess("Phone verified");
-      setStep(2);
+       setStep(2);
+
+       setSuccess("OTP sent successfully");
+
+       setTimer(60);
+       setCanResend(false);
 
     } catch (err) {
 
@@ -48,16 +70,21 @@ export default function ForgotPassword() {
   };
   const handleResendOTP = async () => {
   try {
-    await resendResetOTP({
-      phone: phone.trim()
-    });
+  await resendResetOTP({
+    phone: phone.trim()
+  });
 
-    alert("New OTP sent");
-  } catch (err) {
-    alert(
-      err.response?.data?.detail ||
-      "Failed to resend OTP"
-    );
+  alert("New OTP sent");
+
+    setTimer(60);
+    setCanResend(false);
+
+   } catch (err) {
+
+  alert(
+     err.response?.data?.detail ||
+    "Failed to resend OTP"
+   );
   }
 };
 
@@ -167,13 +194,19 @@ export default function ForgotPassword() {
             >
               {loading ? "Updating..." : "Reset Password"}
             </button>
-            <button
-  type="button"
-  style={s.linkBtn}
-  onClick={handleResendOTP}
->
-  Resend OTP
-</button>
+            {canResend ? (
+           <button
+                type="button"
+                style={s.linkBtn}
+                onClick={handleResendOTP}
+               >
+              Resend OTP
+           </button>
+         ) : (
+            <p style={s.timerText}>
+             Resend OTP in {timer}s
+          </p>
+             )}
 
           </form>
         )}
@@ -198,6 +231,13 @@ const s = {
     borderRadius: 16,
     padding: 36,
     boxShadow: "0 10px 40px rgba(0,0,0,.08)"
+  },
+
+  timerText: {
+     fontSize: "14px",
+     color: "#666",
+     marginTop: "10px",
+     textAlign: "center"
   },
 
   logo: {
