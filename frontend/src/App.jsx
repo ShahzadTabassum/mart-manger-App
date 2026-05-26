@@ -49,8 +49,9 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login/>}/>
-          <Route path="/*"     element={<AppLayout/>}/>
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/*"     element={<AppLayout/>}/>
+
         </Routes>
       </BrowserRouter>
     </AuthProvider>
