@@ -1,4 +1,36 @@
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:Inter,system-ui,sans-serif;background:#f9fafb;}
-a{text-decoration:none;}
-input,select,textarea,button{font-family:inherit;}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Inter, system-ui, sans-serif; background: #f9fafb; }
+a { text-decoration: none; }
+input, select, textarea, button { font-family: inherit; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
+
+/* ── Mobile tweaks ── */
+@media (max-width: 767px) {
+  /* Smaller padding on pages */
+  .page-pad { padding: 16px !important; }
+
+  /* Stat cards wrap nicely */
+  .stat-row { flex-wrap: wrap; }
+  .stat-row > * { min-width: calc(50% - 8px) !important; flex: 1 1 calc(50% - 8px) !important; }
+
+  /* Charts stack vertically */
+  .chart-row { flex-direction: column !important; }
+  .chart-row > * { flex: none !important; width: 100% !important; }
+
+  /* Tables scroll horizontally */
+  .table-wrap { overflow-x: auto; }
+
+  /* POS stacks vertically */
+  .pos-layout { flex-direction: column !important; height: auto !important; overflow: visible !important; }
+  .pos-right  { width: 100% !important; }
+  .pos-left   { height: auto !important; }
+
+  /* Hide less important table columns */
+  .col-hide-mobile { display: none !important; }
+
+  /* Full-width forms */
+  .form-grid { grid-template-columns: 1fr !important; }
+}

@@ -2,15 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, text
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime, timedelta
 from database import get_db
 import models, schemas
 import math
 
 router = APIRouter(prefix="/sales", tags=["Sales"])
 
-POINTS_PER_SGD = 1  # 1 point per SGD 1 spent
-POINTS_TO_SGD  = 0.01  # 1 point = SGD 0.01 discount
+POINTS_PER_SGD = 1
+POINTS_TO_SGD  = 0.01
 
 def generate_sale_number(db: Session) -> str:
     today = date.today().strftime("%Y%m%d")
@@ -35,7 +35,6 @@ def create_sale(data: schemas.SaleIn, db: Session = Depends(get_db)):
         subtotal += line_total
         enriched_items.append({"product": product, "inventory": inventory, "quantity": item.quantity, "line_total": line_total})
 
-    # Discount calculation
     discount_amount = 0.0
     if data.discount_type and data.discount_value:
         if data.discount_type == "PERCENT":
@@ -43,7 +42,6 @@ def create_sale(data: schemas.SaleIn, db: Session = Depends(get_db)):
         elif data.discount_type == "FIXED":
             discount_amount = float(data.discount_value)
 
-    # Loyalty redeem discount
     loyalty_redeemed = 0
     loyalty_discount = 0.0
     customer = None
@@ -57,8 +55,6 @@ def create_sale(data: schemas.SaleIn, db: Session = Depends(get_db)):
     discount_amount = min(discount_amount + loyalty_discount, subtotal)
     total = subtotal - discount_amount
     change_given = max(0.0, float(data.amount_paid or 0) - total)
-
-    # Loyalty points earned (on final total, rounded down)
     loyalty_earned = math.floor(total * POINTS_PER_SGD)
 
     sale = models.Sale(
@@ -95,10 +91,9 @@ def create_sale(data: schemas.SaleIn, db: Session = Depends(get_db)):
             created_by=data.served_by,
         ))
 
-    # Update customer loyalty + stats
     if customer:
         customer.loyalty_points += loyalty_earned - loyalty_redeemed
-        customer.total_spent = float(customer.total_spent or 0) + float(round(total, 2))
+        customer.total_spent += round(total, 2)
         customer.visit_count += 1
         if loyalty_earned > 0:
             db.add(models.LoyaltyTransaction(customer_id=customer.id, sale_id=sale.id, type="EARN", points=loyalty_earned, note=f"Earned from {sale.sale_number}"))
@@ -112,8 +107,8 @@ def create_sale(data: schemas.SaleIn, db: Session = Depends(get_db)):
 @router.get("/", response_model=List[schemas.SaleOut])
 def get_sales(limit: int = Query(50, le=200), offset: int = Query(0), sale_date: Optional[date] = Query(None), payment_method: Optional[str] = Query(None), db: Session = Depends(get_db)):
     q = db.query(models.Sale).order_by(models.Sale.created_at.desc())
-    if sale_date:       q = q.filter(func.date(models.Sale.created_at) == sale_date)
-    if payment_method:  q = q.filter(models.Sale.payment_method == payment_method)
+    if sale_date:      q = q.filter(func.date(models.Sale.created_at) == sale_date)
+    if payment_method: q = q.filter(models.Sale.payment_method == payment_method)
     return q.offset(offset).limit(limit).all()
 
 @router.get("/report/daily")
@@ -125,6 +120,76 @@ def daily_report(db: Session = Depends(get_db)):
 def top_products(db: Session = Depends(get_db)):
     result = db.execute(text("SELECT * FROM v_top_products LIMIT 10")).fetchall()
     return [dict(r._mapping) for r in result]
+
+@router.get("/report/dashboard-stats")
+def dashboard_stats(db: Session = Depends(get_db)):
+    today = date.today()
+    # Today stats
+    today_sales = db.execute(text("""
+        SELECT COUNT(*) as txn, COALESCE(SUM(total),0) as revenue
+        FROM sales WHERE DATE(created_at) = :d
+    """), {"d": today}).fetchone()
+
+    # Last 7 days revenue
+    seven_days = db.execute(text("""
+        SELECT DATE(created_at) as sale_date,
+               COUNT(*) as transactions,
+               COALESCE(SUM(total),0) as revenue
+        FROM sales
+        WHERE created_at >= :start
+        GROUP BY DATE(created_at)
+        ORDER BY sale_date ASC
+    """), {"start": today - timedelta(days=6)}).fetchall()
+
+    # Last 30 days revenue
+    thirty_days = db.execute(text("""
+        SELECT DATE(created_at) as sale_date,
+               COALESCE(SUM(total),0) as revenue
+        FROM sales
+        WHERE created_at >= :start
+        GROUP BY DATE(created_at)
+        ORDER BY sale_date ASC
+    """), {"start": today - timedelta(days=29)}).fetchall()
+
+    # Payment method breakdown (all time)
+    payment_breakdown = db.execute(text("""
+        SELECT payment_method,
+               COUNT(*) as count,
+               COALESCE(SUM(total),0) as revenue
+        FROM sales
+        GROUP BY payment_method
+    """)).fetchall()
+
+    # Top 5 products
+    top_prods = db.execute(text("""
+        SELECT si.product_name, si.sku,
+               SUM(si.quantity) as units_sold,
+               SUM(si.line_total) as revenue
+        FROM sale_items si
+        GROUP BY si.product_id, si.product_name, si.sku
+        ORDER BY units_sold DESC
+        LIMIT 5
+    """)).fetchall()
+
+    # Total customers
+    total_customers = db.query(models.Customer).filter(models.Customer.is_active == True).count()
+
+    # Month revenue vs last month
+    this_month_start = today.replace(day=1)
+    last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
+    this_month_rev = db.execute(text("SELECT COALESCE(SUM(total),0) as rev FROM sales WHERE created_at >= :s"), {"s": this_month_start}).fetchone()
+    last_month_rev = db.execute(text("SELECT COALESCE(SUM(total),0) as rev FROM sales WHERE created_at >= :s AND created_at < :e"), {"s": last_month_start, "e": this_month_start}).fetchone()
+
+    return {
+        "today": {"transactions": today_sales.txn, "revenue": float(today_sales.revenue)},
+        "this_month_revenue": float(this_month_rev.rev),
+        "last_month_revenue": float(last_month_rev.rev),
+        "total_customers": total_customers,
+        "revenue_7days":  [{"date": str(r.sale_date), "revenue": float(r.revenue), "transactions": r.transactions} for r in seven_days],
+        "revenue_30days": [{"date": str(r.sale_date), "revenue": float(r.revenue)} for r in thirty_days],
+        "payment_breakdown": [{"method": r.payment_method, "count": r.count, "revenue": float(r.revenue)} for r in payment_breakdown],
+        "top_products": [{"name": r.product_name, "sku": r.sku, "units_sold": r.units_sold, "revenue": float(r.revenue)} for r in top_prods],
+    }
 
 @router.get("/{sale_id}", response_model=schemas.SaleOut)
 def get_sale(sale_id: int, db: Session = Depends(get_db)):
