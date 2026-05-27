@@ -1,37 +1,78 @@
 import { useEffect, useRef } from "react";
 
-// Renders a single barcode SVG using inline SVG + CODE128
-// No external library needed — pure calculation
-export default function BarcodeLabel({ sku, name, price, showPrice = true }) {
+// Size configs in mm → px at 96dpi (1mm = 3.7795px)
+const SIZES = {
+  small:  { w: 50, h: 30, barH: 28, barW: 1.4, fontSize: 6,  nameSize: 7,  priceSize: 7  },
+  medium: { w: 100, h: 50, barH: 55, barW: 2.2, fontSize: 9,  nameSize: 11, priceSize: 10 },
+};
+
+const MM = 3.7795;
+
+export default function BarcodeLabel({ sku, name, price, showPrice = true, size = "small" }) {
   const svgRef = useRef();
+  const cfg    = SIZES[size] || SIZES.small;
 
   useEffect(() => {
     if (!svgRef.current || !sku) return;
-    drawBarcode(svgRef.current, sku);
-  }, [sku]);
+    drawBarcode(svgRef.current, sku, cfg.barH, cfg.barW);
+  }, [sku, size]);
+
+  const wPx = cfg.w * MM;
+  const hPx = cfg.h * MM;
 
   return (
-    <div style={s.label}>
-      <div style={s.productName}>{name}</div>
-      <svg ref={svgRef} style={s.svg} />
-      <div style={s.skuText}>{sku}</div>
-      {showPrice && price && <div style={s.price}>SGD {parseFloat(price).toFixed(2)}</div>}
+    <div style={{
+      display:       "inline-flex",
+      flexDirection: "column",
+      alignItems:    "center",
+      justifyContent:"center",
+      width:         `${wPx}px`,
+      height:        `${hPx}px`,
+      border:        "0.5px solid #ccc",
+      background:    "#fff",
+      padding:       "2px 4px",
+      boxSizing:     "border-box",
+      gap:           1,
+      fontFamily:    "monospace",
+      overflow:      "hidden",
+    }}>
+      {/* Product name */}
+      <div style={{
+        fontSize:    cfg.nameSize,
+        fontWeight:  700,
+        color:       "#111",
+        textAlign:   "center",
+        width:       "100%",
+        overflow:    "hidden",
+        whiteSpace:  "nowrap",
+        textOverflow:"ellipsis",
+        lineHeight:  1.2,
+      }}>
+        {name}
+      </div>
+
+      {/* Barcode SVG */}
+      <svg ref={svgRef} style={{ display:"block", maxWidth:"100%" }} />
+
+      {/* SKU text */}
+      <div style={{ fontSize: cfg.fontSize, color:"#333", letterSpacing:".04em" }}>
+        {sku}
+      </div>
+
+      {/* Price */}
+      {showPrice && price && (
+        <div style={{ fontSize: cfg.priceSize, fontWeight:700, color:"#4f46e5" }}>
+          SGD {parseFloat(price).toFixed(2)}
+        </div>
+      )}
     </div>
   );
 }
 
-// ── Code128B encoder (subset B — alphanumeric) ──
-function drawBarcode(svg, text) {
-  const CODE128_B = [
-    " ","!",'"',"#","$","%","&","'","(",")","*","+",",","-",".","/",
-    "0","1","2","3","4","5","6","7","8","9",":",";","<","=",">","?",
-    "@","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O",
-    "P","Q","R","S","T","U","V","W","X","Y","Z","[","\\","]","^","_",
-    "`","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o",
-    "p","q","r","s","t","u","v","w","x","y","z","{","|","}","~","DEL"
-  ];
+// ── Code128B encoder ──
+function drawBarcode(svg, text, barH, barW) {
+  const CODE128_B = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~DEL'.split('');
 
-  // Code128 bar patterns (11 modules each)
   const PATTERNS = [
     "11011001100","11001101100","11001100110","10010011000","10010001100",
     "10001001100","10011001000","10011000100","10001100100","11001001000",
@@ -60,55 +101,40 @@ function drawBarcode(svg, text) {
   const START_B = 104;
   const STOP    = 106;
 
-  // Build codes array
   const codes = [START_B];
   let checksum = START_B;
-  for (let i = 0; i < text.length; i++) {
-    const idx = CODE128_B.indexOf(text[i]);
-    if (idx === -1) continue; // skip unsupported chars
+  const chars = text.split("");
+  for (let i = 0; i < chars.length; i++) {
+    const idx = CODE128_B.indexOf(chars[i]);
+    if (idx < 0) continue;
     codes.push(idx);
     checksum += (i + 1) * idx;
   }
   codes.push(checksum % 103);
   codes.push(STOP);
 
-  // Build bar string
   let bars = "";
-  for (const code of codes) {
-    bars += PATTERNS[code] || "";
-  }
-  bars += "11"; // termination bar
+  for (const code of codes) bars += (PATTERNS[code] || "");
+  bars += "11";
 
-  // Draw SVG
-  const barW    = 2;
-  const barH    = 50;
-  const totalW  = bars.length * barW;
-  const totalH  = barH;
+  const totalW = bars.length * barW;
 
-  svg.setAttribute("width", totalW);
-  svg.setAttribute("height", totalH);
-  svg.setAttribute("viewBox", `0 0 ${totalW} ${totalH}`);
+  svg.setAttribute("width",   totalW);
+  svg.setAttribute("height",  barH);
+  svg.setAttribute("viewBox", `0 0 ${totalW} ${barH}`);
   svg.innerHTML = "";
 
   let x = 0;
   for (const bit of bars) {
     if (bit === "1") {
       const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      rect.setAttribute("x", x);
-      rect.setAttribute("y", 0);
-      rect.setAttribute("width", barW);
+      rect.setAttribute("x",      x);
+      rect.setAttribute("y",      0);
+      rect.setAttribute("width",  barW);
       rect.setAttribute("height", barH);
-      rect.setAttribute("fill", "#000");
+      rect.setAttribute("fill",   "#000");
       svg.appendChild(rect);
     }
     x += barW;
   }
 }
-
-const s = {
-  label:       { display:"inline-flex", flexDirection:"column", alignItems:"center", padding:"10px 14px", border:"1px solid #e5e7eb", borderRadius:6, background:"#fff", gap:4, fontFamily:"monospace" },
-  productName: { fontSize:11, fontWeight:700, color:"#111827", textAlign:"center", maxWidth:160, wordBreak:"break-word", lineHeight:1.3 },
-  svg:         { display:"block" },
-  skuText:     { fontSize:10, color:"#374151", letterSpacing:".05em" },
-  price:       { fontSize:12, fontWeight:700, color:"#4f46e5" },
-};
