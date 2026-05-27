@@ -30,8 +30,8 @@ export function AuthProvider({ children }) {
   };
 
   const PERMISSIONS = {
-    ADMIN:   ["dashboard","pos","sales","returns","customers","products","categories","inventory","suppliers","employees","users"],
-    MANAGER: ["dashboard","pos","returns","customers","products","inventory"],
+    ADMIN:   ["dashboard","pos","sales","returns","customers","products","barcodes","categories","inventory","suppliers","employees","users"],
+    MANAGER: ["dashboard","pos","returns","customers","products","barcodes","inventory"],
     CASHIER: ["pos","returns"],
   };
 

@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, text
 from typing import List, Optional
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 from database import get_db
 import models, schemas
 import math
@@ -93,7 +94,7 @@ def create_sale(data: schemas.SaleIn, db: Session = Depends(get_db)):
 
     if customer:
         customer.loyalty_points += loyalty_earned - loyalty_redeemed
-        customer.total_spent += round(total, 2)
+        customer.total_spent += Decimal(str(total))
         customer.visit_count += 1
         if loyalty_earned > 0:
             db.add(models.LoyaltyTransaction(customer_id=customer.id, sale_id=sale.id, type="EARN", points=loyalty_earned, note=f"Earned from {sale.sale_number}"))

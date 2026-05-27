@@ -11,10 +11,11 @@ const allGroups = [
     { to:"/customers", icon:"👥", label:"Customers",          page:"customers"  },
   ]},
   { label:"INVENTORY", links:[
-    { to:"/products",   icon:"📦", label:"Products",    page:"products"   },
-    { to:"/categories", icon:"🗂️", label:"Categories",  page:"categories" },
-    { to:"/inventory",  icon:"🔔", label:"Inventory",   page:"inventory"  },
-    { to:"/suppliers",  icon:"🚚", label:"Suppliers",   page:"suppliers"  },
+    { to:"/products",   icon:"📦", label:"Products",       page:"products"   },
+    { to:"/barcodes",   icon:"🏷️", label:"Barcodes",       page:"products"   },
+    { to:"/categories", icon:"🗂️", label:"Categories",     page:"categories" },
+    { to:"/inventory",  icon:"🔔", label:"Inventory",      page:"inventory"  },
+    { to:"/suppliers",  icon:"🚚", label:"Suppliers",      page:"suppliers"  },
   ]},
   { label:"STAFF", links:[
     { to:"/employees", icon:"👨‍💼", label:"Salesman",   page:"employees" },
@@ -29,7 +30,6 @@ export default function Sidebar({ onClose }) {
   const navigate  = useNavigate();
   const location  = useLocation();
 
-  // Close mobile sidebar on navigation
   useEffect(() => { onClose?.(); }, [location.pathname]);
 
   const handleLogout = () => { logout(); navigate("/login"); };
@@ -52,10 +52,8 @@ export default function Sidebar({ onClose }) {
             <div key={g.label}>
               <div style={s.groupLabel}>{g.label}</div>
               {visible.map(l => (
-                <NavLink
-                  key={l.to} to={l.to} end={l.to==="/"}
-                  style={({ isActive }) => ({ ...s.link, ...(isActive ? s.linkActive : {}) })}
-                >
+                <NavLink key={l.to} to={l.to} end={l.to==="/"}
+                  style={({ isActive }) => ({ ...s.link, ...(isActive ? s.linkActive : {}) })}>
                   <span style={s.linkIcon}>{l.icon}</span>
                   <span>{l.label}</span>
                 </NavLink>
@@ -82,7 +80,7 @@ export default function Sidebar({ onClose }) {
 }
 
 const s = {
-  aside:      { width:220, minWidth:220, background:"#1e1b4b", display:"flex", flexDirection:"column", height:"100vh", flexShrink:0, overflowY:"auto" },
+  aside:      { width:220, minWidth:220, background:"#1e1b4b", display:"flex", flexDirection:"column", height:"100vh", flexShrink:0 },
   logo:       { display:"flex", alignItems:"center", gap:10, padding:"20px 16px", borderBottom:"1px solid #312e81", flexShrink:0 },
   logoIcon:   { fontSize:28 },
   logoName:   { color:"#e0e7ff", fontWeight:700, fontSize:15 },
