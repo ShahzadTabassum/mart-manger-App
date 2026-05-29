@@ -7,18 +7,19 @@ const allGroups = [
     { to:"/",          icon:"📊", label:"Dashboard",          page:"dashboard"  },
     { to:"/pos",       icon:"🛒", label:"Point of Sale",      page:"pos"        },
     { to:"/sales",     icon:"🧾", label:"Sales & Reports",    page:"sales"      },
+    { to:"/orders",    icon:"🛍️", label:"Online Orders",      page:"orders"     },
     { to:"/returns",   icon:"🔄", label:"Returns & Exchange", page:"returns"    },
     { to:"/customers", icon:"👥", label:"Customers",          page:"customers"  },
   ]},
   { label:"INVENTORY", links:[
-    { to:"/products",   icon:"📦", label:"Products",       page:"products"   },
-    { to:"/barcodes",   icon:"🏷️", label:"Barcodes",       page:"products"   },
-    { to:"/categories", icon:"🗂️", label:"Categories",     page:"categories" },
-    { to:"/inventory",  icon:"🔔", label:"Inventory",      page:"inventory"  },
-    { to:"/suppliers",  icon:"🚚", label:"Suppliers",      page:"suppliers"  },
+    { to:"/products",   icon:"📦", label:"Products",    page:"products"   },
+    { to:"/barcodes",   icon:"🏷️", label:"Barcodes",    page:"products"   },
+    { to:"/categories", icon:"🗂️", label:"Categories",  page:"categories" },
+    { to:"/inventory",  icon:"🔔", label:"Inventory",   page:"inventory"  },
+    { to:"/suppliers",  icon:"🚚", label:"Suppliers",   page:"suppliers"  },
   ]},
   { label:"STAFF", links:[
-    { to:"/employees", icon:"👨‍💼", label:"Salesman",   page:"employees" },
+    { to:"/employees", icon:"👨‍💼", label:"Salesman",    page:"employees" },
     { to:"/users",     icon:"🔐", label:"User Access",  page:"users"     },
   ]},
 ];
@@ -40,10 +41,9 @@ export default function Sidebar({ onClose }) {
         <div style={s.logoIcon}>🛍️</div>
         <div>
           <div style={s.logoName}>MartManager</div>
-          <div style={s.logoSub}>v4.0 · Full Management</div>
+          <div style={s.logoSub}>v5.0 · Full + Shop</div>
         </div>
       </div>
-
       <nav style={s.nav}>
         {allGroups.map(g => {
           const visible = g.links.filter(l => can(l.page));
@@ -62,7 +62,6 @@ export default function Sidebar({ onClose }) {
           );
         })}
       </nav>
-
       {user && (
         <div style={s.userBox}>
           <div style={{ ...s.avatar, background: ROLE_CLR[user.role] || "#4f46e5" }}>

@@ -1,0 +1,23 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Inter, system-ui, sans-serif; background: #fff; color: #111827; }
+a { text-decoration: none; color: inherit; }
+input, select, textarea, button { font-family: inherit; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
+
+@media (max-width: 768px) {
+  /* Shop layout — sidebar goes to top */
+  .shop-layout { grid-template-columns: 1fr !important; }
+  /* Product grid smaller */
+  .product-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  /* Hero text smaller */
+  .hero-title { font-size: 28px !important; }
+  /* Checkout/Cart layout stacks */
+  .checkout-layout, .cart-layout { grid-template-columns: 1fr !important; }
+  /* Product detail stacks */
+  .product-layout { grid-template-columns: 1fr !important; }
+  /* Hide desktop nav links */
+  .nav-links { display: none !important; }
+  /* Show hamburger */
+  .nav-hamburger { display: block !important; }
+}

@@ -194,18 +194,64 @@ class User(Base):
     created_at = Column(TIMESTAMP, server_default=func.now())
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
-class PasswordResetOTP(Base):
-    __tablename__ = "password_reset_otps"
+# ── Phase 5: Online Shop ──
 
-    id = Column(Integer, primary_key=True, index=True)
+class ShopCustomer(Base):
+    __tablename__ = "shop_customers"
+    id          = Column(Integer, primary_key=True, index=True)
+    name        = Column(String(150), nullable=False)
+    phone       = Column(String(30),  nullable=False, unique=True)
+    email       = Column(String(150))
+    password    = Column(String(255))
+    is_verified = Column(Boolean, default=False)
+    is_active   = Column(Boolean, default=True)
+    created_at  = Column(TIMESTAMP, server_default=func.now())
+    updated_at  = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+    orders      = relationship("Order", back_populates="customer")
 
-    phone = Column(String(30), nullable=False)
+class Order(Base):
+    __tablename__ = "orders"
+    id               = Column(Integer, primary_key=True, index=True)
+    order_number     = Column(String(30), nullable=False, unique=True)
+    customer_id      = Column(Integer, ForeignKey("shop_customers.id", ondelete="SET NULL"), nullable=True)
+    customer_name    = Column(String(150), nullable=False)
+    customer_phone   = Column(String(30),  nullable=False)
+    customer_email   = Column(String(150))
+    fulfillment_type = Column(Enum("DELIVERY","PICKUP"), nullable=False)
+    delivery_address = Column(Text)
+    payment_method   = Column(Enum("ONLINE","COD"), nullable=False)
+    payment_status   = Column(Enum("PENDING","PAID","FAILED"), default="PENDING")
+    status           = Column(Enum("PENDING","CONFIRMED","PROCESSING","READY","DELIVERED","CANCELLED"), default="PENDING")
+    subtotal         = Column(DECIMAL(10,2), nullable=False, default=0.00)
+    delivery_fee     = Column(DECIMAL(10,2), nullable=False, default=0.00)
+    discount_amount  = Column(DECIMAL(10,2), nullable=False, default=0.00)
+    total            = Column(DECIMAL(10,2), nullable=False, default=0.00)
+    note             = Column(Text)
+    cancelled_reason = Column(String(255))
+    created_at       = Column(TIMESTAMP, server_default=func.now())
+    updated_at       = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+    customer         = relationship("ShopCustomer", back_populates="orders")
+    items            = relationship("OrderItem", back_populates="order", cascade="all, delete")
+    history          = relationship("OrderStatusHistory", back_populates="order", cascade="all, delete")
 
-    otp = Column(String(6), nullable=False)
+class OrderItem(Base):
+    __tablename__ = "order_items"
+    id           = Column(Integer, primary_key=True, index=True)
+    order_id     = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=False)
+    product_id   = Column(Integer, ForeignKey("products.id"), nullable=False)
+    product_name = Column(String(200), nullable=False)
+    sku          = Column(String(50),  nullable=False)
+    unit_price   = Column(DECIMAL(10,2), nullable=False)
+    quantity     = Column(Integer, nullable=False)
+    line_total   = Column(DECIMAL(10,2), nullable=False)
+    order        = relationship("Order", back_populates="items")
 
-    is_used = Column(Boolean, default=False)
-
-    created_at = Column(
-        TIMESTAMP,
-        server_default=func.now()
-    )
+class OrderStatusHistory(Base):
+    __tablename__ = "order_status_history"
+    id         = Column(Integer, primary_key=True, index=True)
+    order_id   = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=False)
+    status     = Column(String(50), nullable=False)
+    note       = Column(String(255))
+    changed_by = Column(String(100))
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    order      = relationship("Order", back_populates="history")

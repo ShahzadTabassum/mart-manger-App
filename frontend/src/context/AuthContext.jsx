@@ -14,9 +14,7 @@ export function AuthProvider({ children }) {
         .then(r  => setUser(r.data))
         .catch(() => { localStorage.removeItem("mm_token"); })
         .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    } else { setLoading(false); }
   }, []);
 
   const loginUser = (token, userData) => {
@@ -30,8 +28,8 @@ export function AuthProvider({ children }) {
   };
 
   const PERMISSIONS = {
-    ADMIN:   ["dashboard","pos","sales","returns","customers","products","barcodes","categories","inventory","suppliers","employees","users"],
-    MANAGER: ["dashboard","pos","returns","customers","products","barcodes","inventory"],
+    ADMIN:   ["dashboard","pos","sales","orders","returns","customers","products","barcodes","categories","inventory","suppliers","employees","users"],
+    MANAGER: ["dashboard","pos","orders","returns","customers","products","barcodes","inventory"],
     CASHIER: ["pos","returns"],
   };
 

@@ -17,6 +17,7 @@ import Employees     from "./pages/Employees";
 import Returns       from "./pages/Returns";
 import Users         from "./pages/Users";
 import Barcodes      from "./pages/Barcodes";
+import Orders        from "./pages/Orders";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -45,10 +46,8 @@ function AppLayout() {
           <div style={{ width:36 }}/>
         </div>
       )}
-
       <div style={ls.body}>
         {!isMobile && <Sidebar onClose={() => {}} />}
-
         {isMobile && sidebarOpen && (
           <>
             <div style={ls.overlay} onClick={() => setSidebarOpen(false)} />
@@ -57,13 +56,13 @@ function AppLayout() {
             </div>
           </>
         )}
-
         <main style={ls.main}>
           <Routes>
             <Route path="/"           element={<ProtectedRoute page="dashboard"> <Dashboard/>  </ProtectedRoute>}/>
             <Route path="/pos"        element={<ProtectedRoute page="pos">       <POS/>        </ProtectedRoute>}/>
             <Route path="/sales"      element={<ProtectedRoute page="sales">     <Sales/>      </ProtectedRoute>}/>
             <Route path="/returns"    element={<ProtectedRoute page="returns">   <Returns/>    </ProtectedRoute>}/>
+            <Route path="/orders"     element={<ProtectedRoute page="orders">    <Orders/>     </ProtectedRoute>}/>
             <Route path="/customers"  element={<ProtectedRoute page="customers"> <Customers/>  </ProtectedRoute>}/>
             <Route path="/products"   element={<ProtectedRoute page="products">  <Products/>   </ProtectedRoute>}/>
             <Route path="/barcodes"   element={<ProtectedRoute page="products">  <Barcodes/>   </ProtectedRoute>}/>
