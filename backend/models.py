@@ -37,8 +37,13 @@ class Product(Base):
     price       = Column(DECIMAL(10,2), nullable=False, default=0.00)
     cost_price  = Column(DECIMAL(10,2), default=0.00)
     description = Column(Text)
-    is_active   = Column(Boolean, default=True)
-    created_at  = Column(TIMESTAMP, server_default=func.now())
+    is_active = Column(Boolean, default=True)
+
+    # Online Shop Fields
+    shop_visible = Column(Boolean, default=True)
+    shop_featured = Column(Boolean, default=False)
+
+    created_at = Column(TIMESTAMP, server_default=func.now())
     updated_at  = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
     category    = relationship("Category", back_populates="products")
     supplier    = relationship("Supplier", back_populates="products")
